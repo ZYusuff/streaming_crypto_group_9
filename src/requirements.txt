@@ -28,7 +28,7 @@ pandas==2.2.3
 parso==0.8.4
 pexpect==4.9.0
 platformdirs==4.3.6
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.41
 psutil==6.1.1
 ptyprocess==0.7.0
 pure-eval==0.2.3
@@ -39,7 +39,6 @@ pygments==2.19.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2025.1
-pywin32==308
 pyzmq==26.2.1
 quixstreams==3.8.0
 referencing==0.36.2
@@ -54,3 +53,7 @@ typing-extensions==4.12.2
 tzdata==2025.1
 urllib3==2.3.0
 wcwidth==0.2.13
+streamlit>=1.24.0
+psycopg2
+
+
