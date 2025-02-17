@@ -1,6 +1,6 @@
 import streamlit as st
 from constants import (
-    POSTGRES_DBNAME,
+    POSTGRES_DB,
     POSTGRES_HOST,
     POSTGRES_PASSWORD,
     POSTGRES_PORT,
@@ -9,11 +9,11 @@ from constants import (
 from sqlalchemy import create_engine 
 import pandas as pd
 
-connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DBNAME}"
+connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
 engine = create_engine(connection_string) #connectar till databas 
 
-query = "SELECT * FROM Shiba_Inu;"
+query = "SELECT * FROM shiba_inu;"
 
 #När man gör en connection till databasen behöver man komma ihåg att stänga ner den
 # with statement kommer automatiskt stängas när den är färdig! Gör samma med filer(open.)
