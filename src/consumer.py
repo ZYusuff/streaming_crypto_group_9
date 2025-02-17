@@ -1,6 +1,6 @@
 from quixstreams import Application
 from constants import (
-    POSTGRES_DBNAME,
+    POSTGRES_DB,
     POSTGRES_HOST,
     POSTGRES_PASSWORD,
     POSTGRES_PORT,
@@ -15,7 +15,7 @@ def create_postgres_sink():
     sink = PostgreSQLSink(
         host=POSTGRES_HOST,
         port=POSTGRES_PORT,
-        dbname=POSTGRES_DBNAME,
+        dbname=POSTGRES_DB,
         user=POSTGRES_USER,
         password=POSTGRES_PASSWORD,
         table_name="Shiba_Inu",
