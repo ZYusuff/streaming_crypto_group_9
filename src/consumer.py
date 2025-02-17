@@ -18,7 +18,7 @@ def create_postgres_sink():
         dbname=POSTGRES_DB,
         user=POSTGRES_USER,
         password=POSTGRES_PASSWORD,
-        table_name="Shiba_Inu",
+        table_name="shiba_inu",
         schema_auto_update=True,
     )
     return sink
