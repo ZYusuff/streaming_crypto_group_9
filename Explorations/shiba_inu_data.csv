@@ -1,0 +1,2 @@
+id,name,symbol,slug,num_market_pairs,date_added,tags,max_supply,circulating_supply,total_supply,is_active,infinite_supply,platform.id,platform.name,platform.symbol,platform.slug,platform.token_address
+5994,Shiba Inu,SHIB,shiba-inu,932,2020-08-01T00:00:00.000Z,"['memes', 'ethereum-ecosystem', 'doggone-doggerel', 'base-ecosystem']",,589253898077739.6,589507260155307.6,1,False,1027,Ethereum,ETH,ethereum,0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce
