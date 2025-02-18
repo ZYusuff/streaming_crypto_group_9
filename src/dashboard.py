@@ -19,7 +19,7 @@ connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@
 engine = create_engine(connection_string)
 
 # Hämta data från databasen
-query = "SELECT coin, price_usd, updated, timestamp FROM XRP;"
+query = 'SELECT coin, price_usd, updated, timestamp FROM "XRP";'
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
 
