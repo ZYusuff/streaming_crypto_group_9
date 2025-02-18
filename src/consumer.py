@@ -7,9 +7,7 @@ from constants import (
     POSTGRES_USER,
 )
 from quixstreams.sinks.community.postgresql import PostgreSQLSink
-
-# Hårdkodad växelkurs (justera vid behov)
-USD_TO_SEK = 10.7  
+ 
 
 def create_postgres_sink():
     sink = PostgreSQLSink(
@@ -29,9 +27,7 @@ def extract_coin_data(message):
     return {
         "coin": message["name"],
         "price_usd": latest_quote["price"],
-        "price_sek": latest_quote["price"] * USD_TO_SEK,  # Konverterat pris
         "volume_usd": latest_quote["volume_24h"],
-        "volume_sek": latest_quote["volume_24h"] * USD_TO_SEK,  # Konverterad volym
         "updated": message["last_updated"],
     }
 
