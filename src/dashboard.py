@@ -8,7 +8,7 @@ from constants import (
 )
 from sqlalchemy import create_engine 
 import pandas as pd
-
+import time 
 # Växlingskurser (uppdatera vid behov)
 USD_TO_SEK = 10.7
 USD_TO_NOK = 11
@@ -22,6 +22,10 @@ engine = create_engine(connection_string)
 query = 'SELECT coin, price_usd, updated, timestamp FROM "XRP";'
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
+    
+    
+st.markdown("# XRP Coin Data")   
+    
 
 # Skapa dropdown för val av valuta
 currency = st.selectbox("Välj en valuta:", ["USD", "SEK", "NOK", "DKK"])
@@ -39,11 +43,11 @@ def convert_price(price_usd, currency):
 # Lägg till konverterad pris-kolumn i datan
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
 df["currency"] = currency
-st.markdown("# XRP Coin Data")
+
 # Visa datan i Streamlit
 
 st.markdown("## Senaste data")
 st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]].head())
 
-
-
+time.sleep(30)
+st.rerun()
