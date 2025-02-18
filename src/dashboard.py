@@ -15,15 +15,14 @@ engine = create_engine(connection_string) #connectar till databas
 
 query = "SELECT * FROM shiba_inu;"
 
-#När man gör en connection till databasen behöver man komma ihåg att stänga ner den
-# with statement kommer automatiskt stängas när den är färdig! Gör samma med filer(open.)
+
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
 
 st.markdown("# Shibu Inu data")
 st.markdown("## latest data")
 
-st.dataframe(df.tail())
+st.dataframe(df.head())
 
-#Gör en webbapplication med hjälp av Streamlit!
+
 
