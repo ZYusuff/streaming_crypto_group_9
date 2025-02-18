@@ -9,11 +9,11 @@ from pprint import pprint
 
 
 #funktion av GET request. GET request data från vår API
-def get_latest_coin_data(target_symbol = "SHIB"):
+def get_latest_coin_data(target_symbol = "XRP"):
 
     API_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
 
-    target_symbol = "SHIB"
+    target_symbol = "XRP"
 
     parameters = {
         'symbol': target_symbol,
@@ -35,14 +35,14 @@ def get_latest_coin_data(target_symbol = "SHIB"):
     pprint(data)
 
 #Funktion för vår Application, startar app
-#Varje 10de sekund kommer while loopen köras för att se uppdateringar, OM man betalar för API:et
+#Varje 40de sekund kommer while loopen köras för att se uppdateringar, OM man betalar för API:et
 def main():
     app = Application(broker_address="localhost:9092", consumer_group="coin_group")
     coins_topic = app.topic(name = "coins", value_serializer="json")
     #PRODUCER
     with app.get_producer() as producer:
         while True:
-            coin_latest = get_latest_coin_data("SHIB")
+            coin_latest = get_latest_coin_data("XRP")
 
 
             kafka_message = coins_topic.serialize(

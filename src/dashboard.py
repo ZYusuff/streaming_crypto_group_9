@@ -19,7 +19,7 @@ connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@
 engine = create_engine(connection_string)
 
 # Hämta data från databasen
-query = "SELECT coin, price_usd, updated, timestamp FROM shiba_inu;"
+query = "SELECT coin, price_usd, updated, timestamp FROM XRP;"
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
 
@@ -39,7 +39,7 @@ def convert_price(price_usd, currency):
 # Lägg till konverterad pris-kolumn i datan
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
 df["currency"] = currency
-st.markdown("# Shiba Inu Data")
+st.markdown("# XRP Coin Data")
 # Visa datan i Streamlit
 
 st.markdown("## Senaste data")
