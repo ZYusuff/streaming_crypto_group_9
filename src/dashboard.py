@@ -12,7 +12,7 @@ from constants import (
 import matplotlib.pyplot as plt
 
 
-# Växlingskurser 
+# Växlingskurser
 USD_TO_SEK = 10.7
 USD_TO_NOK = 11
 USD_TO_DKK = 6.9
@@ -39,6 +39,7 @@ with col2:
 # Skapa dropdown för val av valuta
 currency = st.selectbox("Välj en valuta:", ["USD", "SEK", "NOK", "DKK"])
 
+
 # Funktion för att konvertera priser till valutan användaren valt
 def convert_price(price_usd, currency):
     if currency == "SEK":
@@ -49,6 +50,7 @@ def convert_price(price_usd, currency):
         return price_usd * USD_TO_DKK
     return price_usd  # Standard: USD
 
+
 # Lägg till konverterad pris-kolumn i datan
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
 df["currency"] = currency
@@ -57,12 +59,19 @@ df["currency"] = currency
 st.markdown("## Latest data")
 st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]])
 
+
 # Funktion för att beräkna prisförändring
 def calculate_price_change(df, minutes):
-    df_filtered = df[df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=minutes)]
+    df_filtered = df[
+        df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=minutes)
+    ]
     if len(df_filtered) > 1:
-        return ((df_filtered["price"].iloc[-1] - df_filtered["price"].iloc[0]) / df_filtered["price"].iloc[0]) * 100
+        return (
+            (df_filtered["price"].iloc[-1] - df_filtered["price"].iloc[0])
+            / df_filtered["price"].iloc[0]
+        ) * 100
     return 0
+
 
 # Beräkna prisförändringar för olika tidsperioder
 price_changes = {
@@ -70,6 +79,7 @@ price_changes = {
     "5 min": calculate_price_change(df, 5),
     "10 min": calculate_price_change(df, 10),
     "30 min": calculate_price_change(df, 30),
+    "60 min": calculate_price_change(df, 60),
 }
 
 # Visa prisförändringar
@@ -86,14 +96,25 @@ changes = list(price_changes.values())
 
 # Skapa ett stapeldiagram
 plt.figure(figsize=(10, 6))
-bar_width = 0.4
-plt.bar(periods, changes, color=['green' if change >= 0 else 'red' for change in changes], width=bar_width)
+bar_width = 0.5
+
+plt.bar(
+    periods,
+    changes,
+    color=["green" if change >= 0 else "red" for change in changes],
+    width=bar_width,
+)
+
 
 # Lägg till etiketter och titel
-plt.xlabel('Tidsperiod')
-plt.ylabel('Prisförändring (%)')
-plt.title('Prisförändringar för olika tidsperioder')
-plt.axhline(0, color='black', linewidth=1)  # Lägg till en horisontell linje vid y=0
+plt.xlabel("Time period", fontsize=14)
+plt.ylabel("Price changes (%)", fontsize=14)
+plt.title("Price changes for different time periods", fontsize=20)
+plt.axhline(0, color="black", linewidth=1)  # Lägg till en horisontell linje vid y=0
+
+# Grid for readability
+plt.grid(axis="y", linestyle="--", alpha=0.6)
+
 
 # Visa diagrammet
 st.pyplot(plt)
