@@ -9,6 +9,7 @@ from constants import (
 from sqlalchemy import create_engine 
 import pandas as pd
 import matplotlib.pyplot as plt
+import time 
 
 
 # Växlingskurser (uppdatera vid behov)
@@ -24,9 +25,9 @@ engine = create_engine(connection_string)
 query = 'SELECT coin, price_usd, updated, timestamp FROM "XRP";'
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
+    
 
-
-#columns to show next to eachother 
+#columns show item next to eachother instead of stacking 
 col1, col2 = st.columns(2)
 
 # Added online xrp logo & Name 
@@ -52,6 +53,7 @@ def convert_price(price_usd, currency):
 # Lägg till konverterad pris-kolumn i datan
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
 df["currency"] = currency
+
 
 st.markdown("## Latest data")
 st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]].head())
@@ -101,17 +103,6 @@ plt.show()
 
 
 
-
-
-
-# col1, col2 = st.columns(2)
-# with col1:
-#     user_xrp = st.number_input("Ange din XRP-balans:", min_value=0.0, value=100.0)
-# with col2:
-#     user_balance = user_xrp * df["price"].iloc[-1]
-#     st.metric("Din Totala Balans", f"{user_balance:,.2f} {currency}")
-
-
 # GRAPH! 
 # # Skapa dropdown för att välja tidsintervall
 # timeframe = st.selectbox("Välj tidsintervall:", ["1 minut", "3 minuter", "6 minuter", "10 minuter"])
@@ -127,10 +118,6 @@ plt.show()
 #     df_filtered = df[df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=10)]
 
 
-
-
-
-
-
-
+time.sleep(30)
+st.rerun()
 
