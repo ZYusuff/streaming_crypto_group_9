@@ -16,17 +16,20 @@ USD_TO_SEK = 10.7
 USD_TO_NOK = 11
 USD_TO_DKK = 7
 
-# Anslut till databasen
+# Connect to the database
 connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 engine = create_engine(connection_string)
 
-# Hämta de senaste XRP-priserna från databasen, DESC = Newest first
+
+# Hämta de senaste XRP-priserna från databasen
+#WHERE timestamp >= NOW() - INTERVAL '24 hours'
 query = '''SELECT coin, price_usd, updated, timestamp 
 FROM "XRP" 
 ORDER BY timestamp DESC;'''
 
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
+
 
 # columns show item next to each other instead of stacking
 col1, col2 = st.columns(2)
@@ -37,10 +40,10 @@ with col1:
 with col2:
     st.markdown("# XRP Coin Data")
 
-# Skapa dropdown för val av valuta
-currency = st.selectbox("Välj en valuta:", ["USD", "SEK", "NOK", "DKK"])
+# Create a dropdown for selecting currency
+currency = st.selectbox("Select a currency:", ["USD", "SEK", "NOK", "DKK"])
 
-# Funktion för att konvertera priser till valutan användaren valt
+# Function to convert prices to the selected currency
 def convert_price(price_usd, currency):
     if currency == "SEK":
         return price_usd * USD_TO_SEK
@@ -48,15 +51,16 @@ def convert_price(price_usd, currency):
         return price_usd * USD_TO_NOK
     elif currency == "DKK":
         return price_usd * USD_TO_DKK
-    return price_usd  # Standard: USD
+    return price_usd  # Default: USD
 
-# Lägg till konverterad pris-kolumn i datan
+# Add a new column for the converted price
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
 df["currency"] = currency
 
-# Visa senaste data
+# Show the latest data
 st.markdown("## Latest data")
 st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]])
+
 
 # Convert timestamp to datetime
 df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -73,13 +77,14 @@ def calculate_price_change(df, minutes):
         ) * 100
     return 0
 
-# Beräkna prisförändringar för olika tidsperioder
+# Calculate price changes for different time periods
 price_changes = {
     "5 min": calculate_price_change(df, 10),
     "10 min": calculate_price_change(df, 10),
     "30 min": calculate_price_change(df, 30),
     "60 min": calculate_price_change(df, 60),
 }
+
 
 # Visa prisförändringar i en 2x2 kvadratlayout
 st.markdown("### Price Changes")
@@ -97,7 +102,8 @@ for col, (period, change) in zip(columns, price_changes.items()):
     col.markdown(f"<p style='color: {color}; font-size:37px; font-weight:cursive;'>{direction} {change:.2f}%</p>", unsafe_allow_html=True)
     col.write(period)  # Keep period label normal
 
-## GRAPH
+    
+# GRAPH--------------
 
 # Convert timestamp to datetime format
 df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -107,6 +113,7 @@ df.set_index('timestamp', inplace=True)
 
 # Time intervals in minutes
 timeframes = [1, 10, 20, 30, 40, 50, 60]
+
 price_changes = []
 
 # Calculate price changes for each time period
