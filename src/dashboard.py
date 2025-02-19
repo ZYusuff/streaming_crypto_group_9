@@ -12,7 +12,7 @@ from constants import (
 import matplotlib.pyplot as plt
 
 
-# Växlingskurser (uppdatera vid behov)
+# Växlingskurser 
 USD_TO_SEK = 10.7
 USD_TO_NOK = 11
 USD_TO_DKK = 6.9
@@ -86,7 +86,8 @@ changes = list(price_changes.values())
 
 # Skapa ett stapeldiagram
 plt.figure(figsize=(10, 6))
-plt.bar(periods, changes, color=['green' if change >= 0 else 'red' for change in changes])
+bar_width = 0.4
+plt.bar(periods, changes, color=['green' if change >= 0 else 'red' for change in changes], width=bar_width)
 
 # Lägg till etiketter och titel
 plt.xlabel('Tidsperiod')
