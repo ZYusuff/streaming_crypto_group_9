@@ -1,4 +1,7 @@
 import streamlit as st
+from sqlalchemy import create_engine
+import pandas as pd
+import time
 from constants import (
     POSTGRES_DB,
     POSTGRES_HOST,
@@ -6,13 +9,10 @@ from constants import (
     POSTGRES_PORT,
     POSTGRES_USER,
 )
-from sqlalchemy import create_engine 
-import pandas as pd
 import matplotlib.pyplot as plt
-import time 
 
 
-# Växlingskurser (uppdatera vid behov)
+# Växlingskurser 
 USD_TO_SEK = 10.7
 USD_TO_NOK = 11
 USD_TO_DKK = 6.9
@@ -21,26 +21,25 @@ USD_TO_DKK = 6.9
 connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 engine = create_engine(connection_string)
 
-# Hämta data från databasen
-query = 'SELECT coin, price_usd, updated, timestamp FROM "XRP";'
+# Hämta de senaste 5 XRP-priserna från databasen, sorterat efter timestamp DESC
+query = 'SELECT coin, price_usd, updated, timestamp FROM "XRP" ORDER BY timestamp DESC LIMIT 5;'
+
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
-    
 
-#columns show item next to eachother instead of stacking 
+# columns show item next to each other instead of stacking
 col1, col2 = st.columns(2)
 
-# Added online xrp logo & Name 
+# Added online xrp logo & Name
 with col1:
     st.image("https://cryptologos.cc/logos/xrp-xrp-logo.png", width=150)
 with col2:
     st.markdown("# XRP Coin Data")
 
-
 # Skapa dropdown för val av valuta
 currency = st.selectbox("Välj en valuta:", ["USD", "SEK", "NOK", "DKK"])
 
-# Funktion för att konvertera priser
+# Funktion för att konvertera priser till valutan användaren valt
 def convert_price(price_usd, currency):
     if currency == "SEK":
         return price_usd * USD_TO_SEK
@@ -54,11 +53,9 @@ def convert_price(price_usd, currency):
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
 df["currency"] = currency
 
-
+# Visa senaste data
 st.markdown("## Latest data")
-st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]].head())
-
-
+st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]])
 
 # Funktion för att beräkna prisförändring
 def calculate_price_change(df, minutes):
@@ -81,43 +78,25 @@ for period, change in price_changes.items():
     direction = "↗" if change >= 0 else "↘"
     st.metric(f"{period}", f"{direction} {change:.2f}%")
 
-
 # GRAPH
 
-# Data for price changes
+# Data för prisförändringar
 periods = list(price_changes.keys())
 changes = list(price_changes.values())
 
-# Create a bar chart
+# Skapa ett stapeldiagram
 plt.figure(figsize=(10, 6))
-plt.bar(periods, changes, color=['green' if change >= 0 else 'red' for change in changes])
+bar_width = 0.4
+plt.bar(periods, changes, color=['green' if change >= 0 else 'red' for change in changes], width=bar_width)
 
-# Add labels and title
+# Lägg till etiketter och titel
 plt.xlabel('Tidsperiod')
 plt.ylabel('Prisförändring (%)')
 plt.title('Prisförändringar för olika tidsperioder')
-plt.axhline(0, color='black',linewidth=1)  # Add a horizontal line at y=0
+plt.axhline(0, color='black', linewidth=1)  # Lägg till en horisontell linje vid y=0
 
-# Display the chart
-plt.show()
-
-
-
-# GRAPH! 
-# # Skapa dropdown för att välja tidsintervall
-# timeframe = st.selectbox("Välj tidsintervall:", ["1 minut", "3 minuter", "6 minuter", "10 minuter"])
-
-# # Filtrera data baserat på valt tidsintervall
-# if timeframe == "1 minut":
-#     df_filtered = df[df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=1)]
-# elif timeframe == "3 minuter":
-#     df_filtered = df[df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=3)]
-# elif timeframe == "6 minuter":
-#     df_filtered = df[df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=6)]
-# elif timeframe == "10 minuter":
-#     df_filtered = df[df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=10)]
-
+# Visa diagrammet
+st.pyplot(plt)
 
 time.sleep(30)
 st.rerun()
-
