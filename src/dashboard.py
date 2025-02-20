@@ -11,139 +11,127 @@ from constants import (
 )
 import plotly.graph_objects as go
 
-# Växlingskurser
+# Exchange rates for currency conversion
 USD_TO_SEK = 10.7
 USD_TO_NOK = 11
 USD_TO_DKK = 7
 
-# Anslut till databasen
+# --------------------------- DATABASE CONNECTION --------------------------- #
+# PostgreSQL database connection
 connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 engine = create_engine(connection_string)
 
-# Hämta de senaste XRP-priserna från databasen, DESC = Newest first
+# Fetch the latest XRP prices from the database
 query = '''SELECT coin, price_usd, updated, timestamp 
 FROM "XRP" 
-ORDER BY timestamp DESC;'''
+ORDER BY timestamp DESC;'''  # Consider adding LIMIT?
 
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
 
-# columns show item next to each other instead of stacking
+# Convert timestamp column to datetime format
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+# Set timestamp as the index (helps filtering based on time intervals)
+df.set_index("timestamp", inplace=True)
+
+# --------------------------- STREAMLIT LAYOUT --------------------------- #
+# Create columns
 col1, col2 = st.columns(2)
 
-# Added online XRP logo & Name
+# Display logo
 with col1:
     st.image("https://cryptologos.cc/logos/xrp-xrp-logo.png", width=150)
+
+# Display title
 with col2:
     st.markdown("# XRP Coin Data")
 
-# Skapa dropdown för val av valuta
-currency = st.selectbox("Välj en valuta:", ["USD", "SEK", "NOK", "DKK"])
+# --------------------------- CURRENCY SELECTION --------------------------- #
+# Dropdown menu currency (USD, SEK, NOK, DKK)
+currency = st.selectbox("Select a currency:", ["USD", "SEK", "NOK", "DKK"])
 
-# Funktion för att konvertera priser till valutan användaren valt
+# Function to convert price based on selected currency
 def convert_price(price_usd, currency):
-    if currency == "SEK":
-        return price_usd * USD_TO_SEK
-    elif currency == "NOK":
-        return price_usd * USD_TO_NOK
-    elif currency == "DKK":
-        return price_usd * USD_TO_DKK
-    return price_usd  # Standard: USD
+    rates = {"SEK": USD_TO_SEK, "NOK": USD_TO_NOK, "DKK": USD_TO_DKK, "USD": 1}
+    return price_usd * rates[currency]
 
-# Lägg till konverterad pris-kolumn i datan
+# Apply the conversion function to all rows in the dataset
 df["price"] = df["price_usd"].apply(lambda x: convert_price(x, currency))
+
+# Add a currency column to indicate the selected currency
 df["currency"] = currency
 
-# Visa senaste data
-st.markdown("## Latest data")
-st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]])
+# --------------------------- DISPLAY LATEST DATA --------------------------- #
+st.markdown("## Latest Data")
+# Display the latest data in a table
+st.dataframe(df[["coin", "price", "currency", "updated"]])
 
-# Convert timestamp to datetime
-df['timestamp'] = pd.to_datetime(df['timestamp'])
-
-# Funktion för att beräkna prisförändring
+# --------------------------- PRICE CHANGE CALCULATION --------------------------- #
+# Function to calculate price change over a given time interval
 def calculate_price_change(df, minutes):
-    df_filtered = df[
-        df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=minutes)
-    ]
+    start_time = df.index.max() - pd.Timedelta(minutes=minutes)  # Calculate start time
+    df_filtered = df[df.index >= start_time]  # Filter dataset based on start time
+
+    # Ensures there are at least two data points for comparison
     if len(df_filtered) > 1:
-        return (
-            (df_filtered["price"].iloc[-1] - df_filtered["price"].iloc[0])
-            / df_filtered["price"].iloc[0]
-        ) * 100
-    return 0
+        first_price = df_filtered["price"].iloc[-1]  # Oldest price in the filtered dataset
+        last_price = df_filtered["price"].iloc[0]  # Most recent price in the filtered dataset
+        return ((first_price - last_price) / last_price) * 100  # Percentage change
+    return 0  # Return 0 if not enough data
 
-# Beräkna prisförändringar för olika tidsperioder
-price_changes = {
-    "5 min": calculate_price_change(df, 10),
-    "10 min": calculate_price_change(df, 10),
-    "30 min": calculate_price_change(df, 30),
-    "60 min": calculate_price_change(df, 60),
-}
+# Define time intervals to analyze price (in minutes)
+time_intervals = [5, 10, 30, 60] 
 
-# Visa prisförändringar i en 2x2 kvadratlayout
+# Calculate price changes for each time interval
+price_changes = {f"{min} min": calculate_price_change(df, min) for min in time_intervals}
+
+# --------------------------- DISPLAY PRICE CHANGES --------------------------- #
 st.markdown("### Price Changes")
 
+# Create a 2x2 grid layout to display percentage changes
 row1_col1, row1_col2 = st.columns(2)
 row2_col1, row2_col2 = st.columns(2)
-
 columns = [row1_col1, row1_col2, row2_col1, row2_col2]
 
-# Display each price change in its respective column
+# Display percentage change for each time interval
 for col, (period, change) in zip(columns, price_changes.items()):
-    direction = "↗" if change >= 0 else "↘"
-    color = "green" if change >= 0 else "red"
+    color = "green" if change >= 0 else "red"  # Color code: green for positive, red for negative
+    direction = "↗" if change >= 0 else "↘"  # Arrow indicator based on change direction
     
-    col.markdown(f"<p style='color: {color}; font-size:37px; font-weight:cursive;'>{direction} {change:.2f}%</p>", unsafe_allow_html=True)
-    col.write(period)  # Keep period label normal
+    # Display price change percentage with styling
+    col.markdown(f"<p style='color: {color}; font-size:37px; font-weight:bold;'>{direction} {change:.2f}%</p>", unsafe_allow_html=True)
+    col.write(period)  # Show the corresponding time period label
 
-## GRAPH
 
-# Convert timestamp to datetime format
-df['timestamp'] = pd.to_datetime(df['timestamp'])
-
-# Set timestamp as the index to use resampling
-df.set_index('timestamp', inplace=True)
-
-# Time intervals in minutes
-timeframes = [1, 10, 20, 30, 40, 50, 60]
-price_changes = []
-
-# Calculate price changes for each time period
-for minutes in timeframes:
-    resampled_df = df['price_usd'].resample(f'{minutes}T').last()  # Fetch the last price per time period
-    if len(resampled_df) > 1:
-        price_change = ((resampled_df.iloc[-1] - resampled_df.iloc[0]) / resampled_df.iloc[0]) * 100
-    else:
-        price_change = 0
-    price_changes.append(price_change)
-
-# Create an interactive graph using Plotly
+# --------------------------- GRAPH: PRICE CHANGES OVER TIME --------------------------- #
 fig = go.Figure()
 
-# Add line for price changes with colors based on the changes
-for i in range(1, len(timeframes)):
-    color = 'green' if price_changes[i] >= 0 else 'red'
+# Plot price changes over the defined time intervals
+for i in range(1, len(time_intervals)):
+    color = 'green' if price_changes[f"{time_intervals[i]} min"] >= 0 else 'red'  # Define color based on change direction
+    
+    # Add a line plot for price changes between intervals
     fig.add_trace(go.Scatter(
-        x=timeframes[i-1:i+1],
-        y=price_changes[i-1:i+1],
-        mode='lines+markers',
-        line=dict(color=color, width=3),
-        marker=dict(size=8, color='black', line=dict(width=2)),
-        name=f"{timeframes[i-1]}-{timeframes[i]} min"
+        x=[time_intervals[i-1], time_intervals[i]],  # X-axis: Time intervals
+        y=[price_changes[f"{time_intervals[i-1]} min"], price_changes[f"{time_intervals[i]} min"]],  # Y-axis: Price changes
+        mode='lines+markers',  # Display as lines with markers
+        line=dict(color=color, width=3),  # Line style
+        marker=dict(size=8, color='black', line=dict(width=2)),  # Marker style
+        name=f"{time_intervals[i-1]}-{time_intervals[i]} min"  # Label for legend
     ))
 
-# Update layout for interactivity
+# Graph layout
 fig.update_layout(
-    title="Price changes for XRP over different time intervals",
-    xaxis_title="Time period (minutes)",
-    yaxis_title="Price change (%)",
-    hovermode="x unified"
+    title="Price Changes for XRP Over Different Time Intervals",
+    xaxis_title="Time Period (minutes)",
+    yaxis_title="Price Change (%)",
+    hovermode="x unified"  # Enable hover mode for better interaction
 )
 
-# Display the graph in Streamlit
-st.plotly_chart(fig)
+st.plotly_chart(fig) # Display the graph
 
-# Rerun after 30 seconds
+# --------------------------- AUTO REFRESH --------------------------- #
+# Wait 30 seconds before reloading the page
 time.sleep(30)
 st.rerun()
