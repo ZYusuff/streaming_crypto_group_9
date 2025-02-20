@@ -22,9 +22,10 @@ connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@
 engine = create_engine(connection_string)
 
 # Fetch the latest XRP prices from the database
+#WHERE timestamp >= NOW() - INTERVAL '24 hours'
 query = '''SELECT coin, price_usd, updated, timestamp 
 FROM "XRP" 
-ORDER BY timestamp DESC;'''  # Consider adding LIMIT?
+ORDER BY timestamp DESC;'''  # Considering adding LIMIT?
 
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
