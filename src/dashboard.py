@@ -11,28 +11,34 @@ from constants import (
 )
 import plotly.graph_objects as go
 
-# Exchange rates
+# Växlingskurser
 USD_TO_SEK = 10.7
 USD_TO_NOK = 11
-USD_TO_DKK = 6.9
+USD_TO_DKK = 7
 
 # Connect to the database
 connection_string = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 engine = create_engine(connection_string)
 
-# Fetch the latest XRP prices from the database
-query = '''
-    SELECT coin, price_usd, updated, timestamp
-    FROM "XRP"
-    WHERE timestamp >= NOW() - INTERVAL '24 hours'
-    ORDER BY timestamp ASC;
-'''
+
+# Hämta de senaste XRP-priserna från databasen
+#WHERE timestamp >= NOW() - INTERVAL '24 hours'
+query = '''SELECT coin, price_usd, updated, timestamp 
+FROM "XRP" 
+ORDER BY timestamp DESC;'''
 
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
 
-# Convert timestamp to datetime
-df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+# columns show item next to each other instead of stacking
+col1, col2 = st.columns(2)
+
+# Added online XRP logo & Name
+with col1:
+    st.image("https://cryptologos.cc/logos/xrp-xrp-logo.png", width=150)
+with col2:
+    st.markdown("# XRP Coin Data")
 
 # Create a dropdown for selecting currency
 currency = st.selectbox("Select a currency:", ["USD", "SEK", "NOK", "DKK"])
@@ -55,7 +61,11 @@ df["currency"] = currency
 st.markdown("## Latest data")
 st.dataframe(df[["coin", "price", "currency", "updated", "timestamp"]])
 
-# Function to calculate price change
+
+# Convert timestamp to datetime
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+# Funktion för att beräkna prisförändring
 def calculate_price_change(df, minutes):
     df_filtered = df[
         df["timestamp"] >= df["timestamp"].max() - pd.Timedelta(minutes=minutes)
@@ -69,19 +79,31 @@ def calculate_price_change(df, minutes):
 
 # Calculate price changes for different time periods
 price_changes = {
-    "1 min": calculate_price_change(df, 1),
-    "5 min": calculate_price_change(df, 5),
+    "5 min": calculate_price_change(df, 10),
     "10 min": calculate_price_change(df, 10),
     "30 min": calculate_price_change(df, 30),
+    "60 min": calculate_price_change(df, 60),
 }
 
-# Display price changes
-st.markdown("### Price changes")
-for period, change in price_changes.items():
-    direction = "↗" if change >= 0 else "↘"
-    st.metric(f"{period}", f"{direction} {change:.2f}%")
 
-# GRAPH
+# Visa prisförändringar i en 2x2 kvadratlayout
+st.markdown("### Price Changes")
+
+row1_col1, row1_col2 = st.columns(2)
+row2_col1, row2_col2 = st.columns(2)
+
+columns = [row1_col1, row1_col2, row2_col1, row2_col2]
+
+# Display each price change in its respective column
+for col, (period, change) in zip(columns, price_changes.items()):
+    direction = "↗" if change >= 0 else "↘"
+    color = "green" if change >= 0 else "red"
+    
+    col.markdown(f"<p style='color: {color}; font-size:37px; font-weight:cursive;'>{direction} {change:.2f}%</p>", unsafe_allow_html=True)
+    col.write(period)  # Keep period label normal
+
+    
+# GRAPH--------------
 
 # Convert timestamp to datetime format
 df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -90,7 +112,8 @@ df['timestamp'] = pd.to_datetime(df['timestamp'])
 df.set_index('timestamp', inplace=True)
 
 # Time intervals in minutes
-timeframes = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+timeframes = [1, 10, 20, 30, 40, 50, 60]
+
 price_changes = []
 
 # Calculate price changes for each time period
