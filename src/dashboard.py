@@ -46,7 +46,7 @@ col1, col2 = st.columns(2)
 
 
 
-# Display logo
+# Display log
 with col1:
     st.image("https://cryptologos.cc/logos/xrp-xrp-logo.png", width=150)
 
