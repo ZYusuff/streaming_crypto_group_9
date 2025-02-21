@@ -81,7 +81,7 @@ def calculate_price_change(df, minutes):
     return 0  # Return 0 if not enough data
 
 # Define time intervals to analyze price (in minutes)
-time_intervals = [5, 10, 30, 60] 
+time_intervals = [5, 10, 20, 30, 40, 50, 60] 
 
 # Calculate price changes for each time interval
 price_changes = {f"{min} min": calculate_price_change(df, min) for min in time_intervals}
