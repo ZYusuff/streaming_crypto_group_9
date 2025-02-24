@@ -27,6 +27,9 @@ query = '''SELECT coin, price_usd, updated, timestamp
 FROM "XRP" 
 ORDER BY timestamp DESC;'''  # Considering adding LIMIT?
 
+
+
+
 with engine.connect() as connect:
     df = pd.read_sql(query, connect)
 
@@ -35,12 +38,15 @@ df["timestamp"] = pd.to_datetime(df["timestamp"])
 
 # Set timestamp as the index (helps filtering based on time intervals)
 df.set_index("timestamp", inplace=True)
-
+st.markdown("<h1 style='font-size: 80px; color: #000000;'>The Cointainers</h1>", unsafe_allow_html=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
 # --------------------------- STREAMLIT LAYOUT --------------------------- #
 # Create columns
 col1, col2 = st.columns(2)
 
-# Display logo
+
+
+# Display log
 with col1:
     st.image("https://cryptologos.cc/logos/xrp-xrp-logo.png", width=150)
 
